@@ -9,7 +9,7 @@ get_abs_filename() {
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
-while getopts "d:p:m:s:n:c:u:g" opt
+while getopts "d:p:m:s:n:c:u:g:" opt
 do
    case "$opt" in
       d ) d="$OPTARG" ;;
@@ -35,7 +35,7 @@ fi
 d=$(get_abs_filename "$d")
 p=$(get_abs_filename "$p")
 m=$(get_abs_filename "$m")
-export CUDA_VISIBLE_DEVICES="$g"
+[ -n "$g" ] && export CUDA_VISIBLE_DEVICES="$g"
 cd ./train/tasks/semantic/; ./infer.py -d "$d" -l "$p" -m "$m" -n "$n" -s "$s" -u "$u" -c "$c"
 echo "finishing infering.\n Starting evaluating"
 ./evaluate_iou.py -d "$d" -p "$p" --split "$s" -m "$m"
