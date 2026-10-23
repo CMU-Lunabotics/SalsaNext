@@ -44,12 +44,13 @@ To train/eval you can use the following scripts:
      * ```-d [String]```: Path to the dataset
      * ```-p [String]```: Path to save label predictions
      * ``-m [String]``: Path to the location of saved model
-     * ``-s [String]``: Eval on Validation or Train (standard eval on both separately)
+     * ``-s [String]``: Eval on ```valid``` or ```train``` (standard eval on both separately)
      * ```-u [String]```: If you want to infer using an Uncertainty model (default ```false```)
-     * ```-c [Int]```: Number of MC sampling to do (default ```30```)
+     * ```-c [Int]```: Number of MC sampling to do. Required: omitting it makes ```infer.py``` fail
+     * ```-g [String]```: GPUs to use, e.g. ```0``` (default: all visible GPUs)
    * If you want to infer&evaluate a model that you saved to ````/salsanext/logs/[the desired run]```` and you
    want to infer$eval only the validation and save the label prediction to ```/pred```:
-     * ```./eval.sh -d /dataset -p /pred -m /salsanext/logs/[the desired run] -s validation -n salsanext```
+     * ```./eval.sh -d /dataset -p /pred -m /salsanext/logs/[the desired run] -s valid -c 30 -g 0```
      
 ### Pretrained Model
 
