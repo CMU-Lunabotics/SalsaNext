@@ -177,7 +177,8 @@ class Trainer():
         if self.path is not None:
             torch.nn.Module.dump_patches = True
             w_dict = torch.load(path + "/SalsaNext",
-                                map_location=lambda storage, loc: storage)
+                                map_location=lambda storage, loc: storage,
+                                weights_only=False)
             self.model.load_state_dict(w_dict['state_dict'], strict=True)
             self.optimizer.load_state_dict(w_dict['optimizer'])
             self.epoch = w_dict['epoch'] + 1
