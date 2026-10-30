@@ -57,18 +57,15 @@ class User():
         torch.nn.Module.dump_patches = True
         if self.uncertainty:
             self.model = SalsaNextUncertainty(self.parser.get_n_classes())
-            self.model = nn.DataParallel(self.model)
-            w_dict = torch.load(modeldir + "/SalsaNext",
-                                map_location=lambda storage, loc: storage,
-                                weights_only=False)
-            self.model.load_state_dict(w_dict['state_dict'], strict=True)
         else:
             self.model = SalsaNext(self.parser.get_n_classes())
-            self.model = nn.DataParallel(self.model)
-            w_dict = torch.load(modeldir + "/SalsaNext",
-                                map_location=lambda storage, loc: storage,
-                                weights_only=False)
-            self.model.load_state_dict(w_dict['state_dict'], strict=True)
+        w_dict = torch.load(modeldir + "/SalsaNext",
+                            map_location=lambda storage, loc: storage,
+                            weights_only=False)
+        # multi-GPU training saves DataParallel keys ("module." prefix), single-GPU doesn't
+        state_dict = {k.removeprefix("module."): v for k, v in w_dict['state_dict'].items()}
+        self.model.load_state_dict(state_dict, strict=True)
+        self.model = nn.DataParallel(self.model)
 
     # use knn post processing?
     self.post = None
