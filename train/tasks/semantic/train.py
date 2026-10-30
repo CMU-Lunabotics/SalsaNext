@@ -90,6 +90,12 @@ if __name__ == '__main__':
         const=True, default=False,
         help='Set this if you want to use the Uncertainty Version'
     )
+    parser.add_argument(
+        '--wandb', '-w',
+        type=str2bool, nargs='?',
+        const=True, default=False,
+        help='Log to Weights & Biases (WANDB_BASE_URL, WANDB_ENTITY, WANDB_PROJECT from env)'
+    )
 
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.log = FLAGS.log + '/logs/' + datetime.datetime.now().strftime("%Y-%-m-%d-%H:%M") + FLAGS.name
@@ -172,6 +178,23 @@ if __name__ == '__main__':
         print("Error copying files, check permissions. Exiting...")
         quit()
 
+    # must start before Trainer creates its SummaryWriter so the TensorBoard scalars are mirrored
+    if FLAGS.wandb:
+        import wandb
+        wandb.init(project=os.environ.get("WANDB_PROJECT", "salsanext"),
+                   name=os.path.basename(FLAGS.log), dir=FLAGS.log, sync_tensorboard=True,
+                   config={"arch": ARCH, "data": DATA, "dataset": FLAGS.dataset,
+                           "pretrained": FLAGS.pretrained, "uncertainty": FLAGS.uncertainty})
+
     # create trainer and start the training
     trainer = Trainer(ARCH, DATA, FLAGS.dataset, FLAGS.log, FLAGS.pretrained,FLAGS.uncertainty)
     trainer.train()
+
+    if FLAGS.wandb:
+        # best weights + configs: the files infer.py needs from a log dir
+        model = wandb.Artifact("salsanext-" + wandb.run.id, type="model")
+        for f in ("SalsaNext_valid_best", "arch_cfg.yaml", "data_cfg.yaml"):
+            if os.path.isfile(os.path.join(FLAGS.log, f)):
+                model.add_file(os.path.join(FLAGS.log, f))
+        wandb.log_artifact(model)
+        wandb.finish()
