@@ -112,9 +112,10 @@ class LaserScan:
         if self.flip_sign:
             self.points[:, 1] = -self.points[:, 1]
         if self.DA:
-            jitter_x = random.uniform(-5,5)
-            jitter_y = random.uniform(-3, 3)
-            jitter_z = random.uniform(-1, 0)
+            # KITTI-scale shifts (x +-5, y +-3, z -1..0 m) move the viewpoint outside a ~7 m arena
+            jitter_x = random.uniform(-0.5, 0.5)
+            jitter_y = random.uniform(-0.5, 0.5)
+            jitter_z = 0.0
             self.points[:, 0] += jitter_x
             self.points[:, 1] += jitter_y
             self.points[:, 2] += jitter_z
