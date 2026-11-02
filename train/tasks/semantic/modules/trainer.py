@@ -104,7 +104,8 @@ class Trainer():
                                           batch_size=self.ARCH["train"]["batch_size"],
                                           workers=self.ARCH["train"]["workers"],
                                           gt=True,
-                                          shuffle_train=True)
+                                          shuffle_train=True,
+                                          augment=self.ARCH["train"].get("augment"))
 
         # weights for loss (and bias)
 

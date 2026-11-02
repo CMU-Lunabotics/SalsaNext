@@ -70,7 +70,8 @@ class SemanticKitti(Dataset):
                sensor,              # sensor to parse scans from
                max_points=150000,   # max number of points present in dataset
                gt=True,
-               transform=False):            # send ground truth?
+               transform=False,             # send ground truth?
+               augment=None):               # {"shift": bool, "drop_points": bool}, both default True
     # save deats
     self.root = os.path.join(root, "sequences")
     self.sequences = sequences
@@ -90,6 +91,7 @@ class SemanticKitti(Dataset):
     self.max_points = max_points
     self.gt = gt
     self.transform = transform
+    self.augment = augment or {}
 
     # get number of classes (can't be len(self.learning_map) because there
     # are multiple repeated entries, so the number that matters is how many
@@ -165,13 +167,14 @@ class SemanticKitti(Dataset):
     drop_points = False
     if self.transform:
         if random.random() > 0.5:
-            if random.random() > 0.5:
+            if random.random() > 0.5 and self.augment.get("shift", True):
                 DA = True
             if random.random() > 0.5:
                 flip_sign = True
             if random.random() > 0.5:
                 rot = True
-            drop_points = random.uniform(0, 0.5)
+            if self.augment.get("drop_points", True):
+                drop_points = random.uniform(0, 0.5)
 
     if self.gt:
       scan = SemLaserScan(self.color_map,
@@ -292,7 +295,8 @@ class Parser():
                batch_size,        # batch size for train and val
                workers,           # threads to load data
                gt=True,           # get gt?
-               shuffle_train=True):  # shuffle training set?
+               shuffle_train=True,  # shuffle training set?
+               augment=None):     # train-time augmentation switches, see SemanticKitti
     super(Parser, self).__init__()
 
     # if I am training, get the dataset
@@ -324,7 +328,8 @@ class Parser():
                                        sensor=self.sensor,
                                        max_points=max_points,
                                        transform=True,
-                                       gt=self.gt)
+                                       gt=self.gt,
+                                       augment=augment)
 
     self.trainloader = torch.utils.data.DataLoader(self.train_dataset,
                                                    batch_size=self.batch_size,
