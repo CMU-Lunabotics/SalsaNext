@@ -19,6 +19,9 @@ train:
   # in log folder
   show_scans: False      # show scans during training
   workers: 4            # number of threads to get data
+  augment:
+    shift: True         # random whole-scan shift (x +-5, y +-3, z -1..0 m)
+    drop_points: True   # randomly drop up to 50% of points
 
 ################################################################################
 # postproc parameters
