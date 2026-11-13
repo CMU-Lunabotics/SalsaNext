@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from common.laserscan import LaserScan, SemLaserScan
+from common.augmentations import from_config as augmentations_from_config
 import torchvision
 
 import torch
@@ -71,7 +72,8 @@ class SemanticKitti(Dataset):
                max_points=150000,   # max number of points present in dataset
                gt=True,
                transform=False,             # send ground truth?
-               augment=None):               # {"shift": bool, "drop_points": bool}, both default True
+               augment=None):               # {"shift": bool, "drop_points": bool}, both default True;
+                                            # "registration_noise": {...} (off by default), see common/augmentations.py
     # save deats
     self.root = os.path.join(root, "sequences")
     self.sequences = sequences
@@ -92,6 +94,8 @@ class SemanticKitti(Dataset):
     self.gt = gt
     self.transform = transform
     self.augment = augment or {}
+    # point-cloud augmentations from common/augmentations.py, train split only (None when none are on)
+    self.scan_aug = augmentations_from_config(self.augment) if transform else None
 
     # get number of classes (can't be len(self.learning_map) because there
     # are multiple repeated entries, so the number that matters is how many
@@ -185,7 +189,8 @@ class SemanticKitti(Dataset):
                           fov_down=self.sensor_fov_down,
                           DA=DA,
                           flip_sign=flip_sign,
-                          drop_points=drop_points)
+                          drop_points=drop_points,
+                          scan_aug=self.scan_aug)
     else:
       scan = LaserScan(project=True,
                        H=self.sensor_img_H,
@@ -195,7 +200,8 @@ class SemanticKitti(Dataset):
                        DA=DA,
                        rot=rot,
                        flip_sign=flip_sign,
-                       drop_points=drop_points)
+                       drop_points=drop_points,
+                       scan_aug=self.scan_aug)
 
     # open and obtain scan
     scan.open_scan(scan_file)

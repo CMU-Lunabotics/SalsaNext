@@ -11,7 +11,8 @@ class LaserScan:
     """Class that contains LaserScan with x,y,z,r"""
     EXTENSIONS_SCAN = ['.bin']
 
-    def __init__(self, project=False, H=64, W=1024, fov_up=3.0, fov_down=-25.0,DA=False,flip_sign=False,rot=False,drop_points=False):
+    def __init__(self, project=False, H=64, W=1024, fov_up=3.0, fov_down=-25.0,DA=False,flip_sign=False,rot=False,drop_points=False,
+                 scan_aug=None):
         self.project = project
         self.proj_H = H
         self.proj_W = W
@@ -21,6 +22,7 @@ class LaserScan:
         self.flip_sign = flip_sign
         self.rot = rot
         self.drop_points = drop_points
+        self.scan_aug = scan_aug  # (N,4) points -> (N,4), count-preserving; see common/augmentations.py
 
         self.reset()
 
@@ -82,6 +84,9 @@ class LaserScan:
         # if all goes well, open pointcloud
         scan = np.fromfile(filename, dtype=np.float32)
         scan = scan.reshape((-1, 4))
+        if self.scan_aug is not None:
+            # before drop_points, and it keeps point count and order, so open_label stays aligned
+            scan, _ = self.scan_aug(scan)
 
         # put in attribute
         points = scan[:, 0:3]  # get xyz
@@ -198,8 +203,9 @@ class SemLaserScan(LaserScan):
     """Class that contains LaserScan with x,y,z,r,sem_label,sem_color_label,inst_label,inst_color_label"""
     EXTENSIONS_LABEL = ['.label']
 
-    def __init__(self, sem_color_dict=None, project=False, H=64, W=1024, fov_up=3.0, fov_down=-25.0, max_classes=300,DA=False,flip_sign=False,drop_points=False):
-        super(SemLaserScan, self).__init__(project, H, W, fov_up, fov_down,DA=DA,flip_sign=flip_sign,drop_points=drop_points)
+    def __init__(self, sem_color_dict=None, project=False, H=64, W=1024, fov_up=3.0, fov_down=-25.0, max_classes=300,DA=False,flip_sign=False,drop_points=False,scan_aug=None):
+        super(SemLaserScan, self).__init__(project, H, W, fov_up, fov_down,DA=DA,flip_sign=flip_sign,drop_points=drop_points,
+                                           scan_aug=scan_aug)
         self.reset()
 
         # make semantic colors
